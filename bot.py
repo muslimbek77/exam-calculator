@@ -36,7 +36,7 @@ async def start_command(message:Message):
     telegram_id = message.from_user.id
     try:
         db.add_user(full_name=full_name,telegram_id=telegram_id)
-        await message.answer(text="Botni o'zing to'g'rla uka")
+        await message.answer(text="Botni o'zing to'g'rla ")
     except:
         await message.answer(text="Boting endi ishlamaydi")
 
