@@ -36,9 +36,13 @@ async def start_command(message:Message):
     telegram_id = message.from_user.id
     try:
         db.add_user(full_name=full_name,telegram_id=telegram_id)
-        await message.answer(text="Botni o'zing to'g'rla")
+        await message.answer(text="Botni o'zing to'g'rla uka")
     except:
         await message.answer(text="Boting endi ishlamaydi")
+
+
+
+
 
 
 #calculator
@@ -181,6 +185,13 @@ async def off_startup_notify(bot: Bot):
         except Exception as err:
             logging.exception(err)
 
+
+
+
+#nimadur xabar yozsa "/calc" komandasidan foydalaning deb chiqarishi kerak
+@dp.message()
+async def xabar(message: Message):
+    await message.answer("Zebra boting ishdan chiqdi")
 
 
 
