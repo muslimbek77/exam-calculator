@@ -16,8 +16,18 @@ Yaxshiyamki Sarvar loyihani qaysi joylarini o'zgartirganini bilar ekan bo'lmasa 
 Quida Sarvar o'zgartirgan joylarni ko'rishingiz mumkin.
 ![image](https://github.com/muslimbek77/exam-calculator/assets/48023644/6c7f1473-a393-411a-b9c9-3e89219c1f82)
 ![image](https://github.com/muslimbek77/exam-calculator/assets/48023644/5a9d0818-86f9-42db-90fe-26980f6e26d8)
-![image](https://github.com/muslimbek77/exam-calculator/assets/48023644/f1923066-8345-4636-a7a1-f64a62cd1053)
+![image](https://github.com/muslimbek77/exam-calculator/assets/48023644/f1923066-8345-4636-a7a1-f64a62cd1053) 
 
+Sardorning botida quidagi button va komandalar ham bo'lishi kerak.
+-komandalar
+/calc - kalkulyator menusi chiqishi kerak
+/help - botdan foydalanish
+/about - bot haqida ma'lumot
 
+buttonlar (inline yoki keyboard button)
+[Bot haqida] - Bot haqida,
+[Bizning manzil] - manzil
+[Admin bilan bog'lanish] - Admin(bot yaratgan odam) ma'lumotlari
+/count tugmasi hamma uchun ishlashi kerak (faqat admin uchun emas)
 
 
