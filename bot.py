@@ -11,12 +11,16 @@ from menucommands.set_bot_commands  import set_default_commands
 from baza.sqlite import Database
 from filters.admin import IsBotAdminFilter
 from filters.check_sub_channel import IsCheckSubChannels
-from keyboard_buttons import admin_keyboard
-from aiogram.fsm.context import FSMContext #new
+from keyboard_buttons import admin_keyboard,calculator_button
+from aiogram.fsm.context import FSMContext
+from middlewares.throttling import ThrottlingMiddleware #new
 from states.reklama import Adverts
 from aiogram.types import InlineKeyboardButton
 from aiogram.utils.keyboard import InlineKeyboardBuilder
 import time 
+from aiogram.types import CallbackQuery
+
+#sozlash
 ADMINS = config.ADMINS
 TOKEN = config.BOT_TOKEN
 CHANNELS = config.CHANNELS
@@ -25,18 +29,87 @@ dp = Dispatcher()
 
 
 
-
+#start komandasi uchun javob
 @dp.message(CommandStart())
 async def start_command(message:Message):
     full_name = message.from_user.full_name
     telegram_id = message.from_user.id
     try:
         db.add_user(full_name=full_name,telegram_id=telegram_id)
-        await message.answer(text="Assalomu alaykum, botimizga hush kelibsiz")
+        await message.answer(text="Botni o'zing to'g'rla")
     except:
-        await message.answer(text="Assalomu alaykum")
+        await message.answer(text="Boting endi ishlamaydi")
 
 
+#calculator
+@dp.message(Command("calc"))
+async def open_calc_answer(message: Message):
+    await message.answer("|", reply_markup=calculator_button.calculator_builder)
+
+
+
+#calculator tugmalariga javob yaratish
+@dp.callback_query()
+async def callback_answer(callback: CallbackQuery):
+
+    if callback.message.text == "|":
+        if callback.data in "DC": await callback.answer(f"❗ O'chirish uchun ifoda mavjud emas!", show_alert=True)
+        elif callback.data in "+-*/=,":
+            await callback.answer(f"❗ Siz ifodani {callback.data} belgisi bilan boshlay olmaysiz", show_alert=True)
+        else:
+            await callback.message.edit_text(callback.data + callback.message.text)
+
+            await callback.message.edit_reply_markup(
+                reply_markup=calculator_button.calculator_builder
+            )
+    else:
+        if callback.data == "D":
+            await callback.message.edit_text(callback.message.text[:-2] + "|", reply_markup=calculator_button.calculator_builder)
+        elif callback.data == "C":
+            await callback.message.edit_text("|", reply_markup=calculator_button.calculator_builder)
+
+        elif (callback.message.text[-2].isdigit()) and callback.data == "=" and ("+" in callback.message.text or "-" in callback.message.text or "*" in callback.message.text or "/" in callback.message.text):
+            ifoda = callback.message.text.replace(",", ".")
+
+            await callback.message.edit_text(
+                str(eval(ifoda[:-1])) + "|"
+            )
+            await callback.message.edit_reply_markup(
+                reply_markup=calculator_button.calculator_builder
+            )
+        elif callback.data == "=":
+            await callback.answer("❗ Ifoda to'liq emas!", show_alert=True)
+
+        elif callback.message.text[-2].isdigit() or callback.data.isdigit():
+            await callback.message.edit_text(
+                callback.message.text[:-1] + callback.data + callback.message.text[-1],
+            )
+            await callback.message.edit_reply_markup(
+                reply_markup=calculator_button.calculator_builder
+            )
+        elif callback.data in "+-*/":
+            await callback.message.edit_text(
+                callback.message.text[:-2] + callback.data + "|",
+                reply_markup=calculator_button.calculator_builder
+            )
+        elif callback.data == ",":
+            await callback.answer("❗Noto'g'ri buyruq!", show_alert=True)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+#kanalga obuna bo'lishni tekshirish uchun
 @dp.message(IsCheckSubChannels())
 async def kanalga_obuna(message:Message):
     text = ""
@@ -50,6 +123,9 @@ async def kanalga_obuna(message:Message):
 
 
 
+
+
+#Admin komandalari uchun
 @dp.message(Command("admin"),IsBotAdminFilter(ADMINS))
 async def is_admin(message:Message):
     await message.answer(text="Admin menu",reply_markup=admin_keyboard.admin_button)
@@ -86,7 +162,7 @@ async def send_advert(message:Message,state:FSMContext):
 
 
 
-
+#bot ishga tushganini xabarini yuborish
 @dp.startup()
 async def on_startup_notify(bot: Bot):
     for admin in ADMINS:
@@ -95,7 +171,8 @@ async def on_startup_notify(bot: Bot):
         except Exception as err:
             logging.exception(err)
 
-#bot ishga tushganini xabarini yuborish
+
+#bot ishni yakunlaganining xabarini yuborish
 @dp.shutdown()
 async def off_startup_notify(bot: Bot):
     for admin in ADMINS:
@@ -105,23 +182,28 @@ async def off_startup_notify(bot: Bot):
             logging.exception(err)
 
 
-def setup_middlewares(dispatcher: Dispatcher, bot: Bot) -> None:
-    """MIDDLEWARE"""
-    from middlewares.throttling import ThrottlingMiddleware
-
-    # Spamdan himoya qilish uchun klassik ichki o'rta dastur. So'rovlar orasidagi asosiy vaqtlar 0,5 soniya
-    dispatcher.message.middleware(ThrottlingMiddleware(slow_mode_delay=0.5))
-
 
 
 async def main() -> None:
+
     global bot,db
     bot = Bot(TOKEN, parse_mode=ParseMode.HTML)
-    db = Database(path_to_db="data/main.db")
+    
+    #malumotlar bazasini yaratish
+    db = Database(path_to_db="users.db")
+
+    #flood ni oldini olish
+    dp.message.middleware(ThrottlingMiddleware(slow_mode_delay=0.5))
+
+    #foydalanuvchilar jadvalini yaratish
     db.create_table_users()
+
+    #birlamchi komandalar
     await set_default_commands(bot)
+
+    #botni ishga tushirish
     await dp.start_polling(bot)
-    setup_middlewares(dispatcher=dp, bot=bot)
+    
 
 
 
